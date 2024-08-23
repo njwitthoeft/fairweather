@@ -37,11 +37,7 @@ reports[keys[2]]["last_idx"] = None
 for name, report in reports.items():
     print(report)
     print(report["first_idx"])
-    report_content = kids[
-        report["first_idx"] : (
-            report["last_idx"] if report["last_idx"] is not None else len(kids)
-        )
-    ]
+    report_content = kids[report["first_idx"] : report["last_idx"]]
     report["content"] = report_content
 
 for name, report in reports.items():
