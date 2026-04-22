@@ -1,7 +1,7 @@
-name: Example
+name: Checks
 
 jobs:
-  run checks:
+  run-checks:
     runs-on: ubuntu-latest
 
     steps:
