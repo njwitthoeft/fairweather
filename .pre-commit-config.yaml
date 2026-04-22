@@ -1,0 +1,30 @@
+repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.11.7
+    hooks:
+      - id: uv-lock
+        name: Sync uv.lock
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.15.11
+    hooks:
+      # Run the linter.
+      - id: ruff-check
+        name: Lint
+        args: [ --fix ]
+
+      # Run the formatter.
+      - id: ruff-format
+        name: Format
+
+  - repo: local
+    hooks: 
+      - id: pytest
+        name: Test
+        entry: uv run pytest
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
