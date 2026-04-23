@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from datetime import date as _date
 
 from fairweather.tides.api import TurnPrediction
 
@@ -56,6 +57,7 @@ def find_optimal_tide_turn(
     start_hour: int = 6,
     end_hour: int = 15,
     day_offset: int = 1,
+    target_date: _date | None = None,
 ) -> TurnPrediction:
     """Return the first tide prediction for the target day (today + `day_offset`) whose
     local time falls between `start_hour` and `end_hour` (inclusive).
@@ -63,8 +65,11 @@ def find_optimal_tide_turn(
     Uses the prediction's local time (via `TidePrediction.local_time()`) so comparisons
     respect the machine's local timezone. Returns `None` when no suitable tide is found.
     """
-    local_now = datetime.now().astimezone()
-    target_date = (local_now + timedelta(days=day_offset)).date()
+    # If an explicit target_date is provided, use it. Otherwise compute
+    # the target date as today + day_offset (preserving existing behavior).
+    if target_date is None:
+        local_now = datetime.now().astimezone()
+        target_date = (local_now + timedelta(days=day_offset)).date()
 
     # Predictions are returned in chronological order.
     for p in tide_predictions:
@@ -74,9 +79,11 @@ def find_optimal_tide_turn(
     return None
 
 
-def find_optimal_tide_cycle(tide_predictions: list[TurnPrediction]) -> TideCycle:
+def find_optimal_tide_cycle(
+    tide_predictions: list[TurnPrediction], target_date: _date | None = None
+) -> TideCycle:
     """Find the tide cycle that starts with the optimal tide turn."""
-    optimal_turn = find_optimal_tide_turn(tide_predictions)
+    optimal_turn = find_optimal_tide_turn(tide_predictions, target_date=target_date)
     if not optimal_turn:
         return None
 

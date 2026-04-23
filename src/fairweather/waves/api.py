@@ -4,13 +4,14 @@ from pydantic import BaseModel, Field
 import httpx
 
 OPEN_METEO_MARINE = "https://marine-api.open-meteo.com/v1/marine"
-M_TO_FT = 3.28084
 
 
 class WaveRequest(BaseModel):
     latitude: float
     longitude: float
     timezone: Literal["GMT"] = "GMT"
+    length_unit: Literal["imperial"] = "imperial"
+
     start_date: str  # YYYY-MM-DD
     end_date: str  # YYYY-MM-DD
 
@@ -40,11 +41,11 @@ class HourlyDataSOA(BaseModel):
 
 class HourlySOAUnits(BaseModel):
     time: str
-    wave_height: Literal["m"]
+    wave_height: Literal["ft"]
     wave_period: Literal["s"]
     wave_direction: Literal["°"]
 
-    wind_wave_height: Literal["m"]
+    wind_wave_height: Literal["ft"]
     wind_wave_period: Literal["s"]
     wind_wave_direction: Literal["°"]
 

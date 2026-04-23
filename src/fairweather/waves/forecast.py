@@ -6,10 +6,9 @@ from pydantic import BaseModel
 from fairweather.waves.api import WaveForecastResponse
 
 OPEN_METEO_MARINE = "https://marine-api.open-meteo.com/v1/marine"
-M_TO_FT = 3.28084
 
 
-class HourlyForecast(BaseModel):
+class HourlyWaveForecast(BaseModel):
     time: datetime
     wave_height: float
     wave_period: float
@@ -29,7 +28,7 @@ class HourlyForecast(BaseModel):
 
 def forecast_response_to_hourly_entries(
     forecast: WaveForecastResponse,
-) -> List[HourlyForecast]:
+) -> List[HourlyWaveForecast]:
     entries = []
 
     for (
@@ -49,12 +48,18 @@ def forecast_response_to_hourly_entries(
         forecast.hourly.wind_wave_period,
         forecast.hourly.wind_wave_direction,
     ):
-        entry = HourlyForecast(
-            time=datetime.fromisoformat(time).astimezone(timezone.utc),
-            wave_height=wave_height * M_TO_FT,
+        dt = datetime.fromisoformat(time)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+
+        entry = HourlyWaveForecast(
+            time=dt,
+            wave_height=wave_height,
             wave_period=wave_period,
             wave_direction=wave_direction,
-            wind_wave_height=wind_wave_height * M_TO_FT,
+            wind_wave_height=wind_wave_height,
             wind_wave_period=wind_wave_period,
             wind_wave_direction=wind_wave_direction,
         )
@@ -64,7 +69,7 @@ def forecast_response_to_hourly_entries(
 
 
 class WaveForecast(BaseModel):
-    hourlies: List[HourlyForecast]
+    hourlies: List[HourlyWaveForecast]
 
     @classmethod
     def from_response(cls, response: WaveForecastResponse) -> "WaveForecast":
@@ -73,7 +78,7 @@ class WaveForecast(BaseModel):
 
     def within_time_range(
         self, cycle_start: datetime, cycle_end: datetime
-    ) -> List[HourlyForecast]:
+    ) -> WaveForecast:
         return WaveForecast(
             hourlies=[
                 entry
@@ -82,11 +87,11 @@ class WaveForecast(BaseModel):
             ]
         )
 
-    def max_wave_height_entry(self) -> float:
+    def max_wave_height_entry(self) -> HourlyWaveForecast:
         max_entry = max(self.hourlies, key=lambda e: e.wave_height)
         return max_entry
 
-    def min_wave_height_entry(self) -> float:
+    def min_wave_height_entry(self) -> HourlyWaveForecast:
         min_entry = min(self.hourlies, key=lambda e: e.wave_height)
         return min_entry
 
