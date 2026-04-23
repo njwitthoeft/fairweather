@@ -24,12 +24,8 @@ def render_detailed_report(
     lines.append("")
     lines.append(f"Optimal tide for {start_local.month}/{start_local.day}:")
     lines.append(f"- {cycle_type} tide starting at {start_local.strftime('%H:%M')}")
-    lines.append(
-        f"- {start_lbl} {start_local.month}/{start_local.day} {start_local.strftime('%H:%M')} {start_h:.1f}ft"
-    )
-    lines.append(
-        f"- {end_lbl} {end_local.month}/{end_local.day} {end_local.strftime('%H:%M')} {end_h:.1f}ft"
-    )
+    lines.append(f"- {start_lbl} {start_local.strftime('%H:%M')} {start_h:.1f}ft")
+    lines.append(f"- {end_lbl} {end_local.strftime('%H:%M')} {end_h:.1f}ft")
     lines.append(f"- Spread {spread:.1f} ft")
     lines.append("")
 
@@ -56,10 +52,10 @@ def render_detailed_report(
     max_w = winds_forecast.max_wind_entry()
     min_w = winds_forecast.min_wind_entry()
     lines.append(
-        f"- Max: {max_w.time.astimezone().strftime('%-m/%-d %H:%M')} — {max_w.wind_speed_mph:.1f} mph, dir {humanize(max_w.wind_direction)}"
+        f"- Max: {max_w.time.astimezone().strftime('%H:%M')} — {max_w.wind_speed_mph:.1f} mph, dir {humanize(max_w.wind_direction)}"
     )
     lines.append(
-        f"- Min: {min_w.time.astimezone().strftime('%-m/%-d %H:%M')} — {min_w.wind_speed_mph:.1f} mph, dir {humanize(min_w.wind_direction)}"
+        f"- Min: {min_w.time.astimezone().strftime('%H:%M')} — {min_w.wind_speed_mph:.1f} mph, dir {humanize(min_w.wind_direction)}"
     )
 
     lines.append("")
@@ -70,16 +66,16 @@ def render_detailed_report(
     min_e = min(temps_seq, key=lambda h: h.temperature)
     max_e = max(temps_seq, key=lambda h: h.temperature)
     lines.append(
-        f"- Low  {min_e.temperature:.1f}°F at {min_e.time.astimezone().strftime('%-m/%-d %H:%M')}"
+        f"- Low:  {min_e.temperature:.1f}°F at {min_e.time.astimezone().strftime('%H:%M')}"
     )
     lines.append(
-        f"- High {max_e.temperature:.1f}°F at {max_e.time.astimezone().strftime('%-m/%-d %H:%M')}"
+        f"- High: {max_e.temperature:.1f}°F at {max_e.time.astimezone().strftime('%H:%M')}"
     )
 
     # Rain: sum hourly rain in winds forecast
     lines.append("")
     lines.append("Rain:")
     total_rain = sum(h.rain for h in winds_forecast.hourlies)
-    lines.append(f"- {total_rain:.1f} in. over tide")
+    lines.append(f"- {total_rain:.1f} inches over tide")
 
     return "\n".join(lines)

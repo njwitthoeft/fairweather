@@ -12,6 +12,7 @@ class WindRequest(BaseModel):
     timezone: Literal["GMT"] = "GMT"
     start_date: str  # YYYY-MM-DD
     end_date: str  # YYYY-MM-DD
+    temperature_unit: Literal["fahrenheit"] = "fahrenheit"
 
     hourly: List[str] = Field(
         default_factory=lambda: [
