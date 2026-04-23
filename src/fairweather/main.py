@@ -1,8 +1,8 @@
 import argparse
 import json
+import os
 from datetime import datetime, date as _date
 
-from fairweather.direction import humanize
 from fairweather.tides.api import TideRequest, fetch_tides
 from fairweather.tides.cycle import (
     find_optimal_tide_cycle,
@@ -11,6 +11,7 @@ from fairweather.waves.api import WaveRequest, fetch_wave_forecast
 from fairweather.waves.forecast import WaveForecast
 from fairweather.winds.api import WindRequest, fetch_wind_forecast
 from fairweather.winds.forecast import WindForecast
+from fairweather.formatters import render_detailed_report
 
 
 def main():
@@ -78,41 +79,25 @@ def main():
         print("Optimal tide cycle:")
         print(optimal_cycle)
 
-        # Waves
-        mean_wh = waves_during_cycle.mean_wave_height()
-        max_wh_entry = waves_during_cycle.max_wave_height_entry()
-        min_wh_entry = waves_during_cycle.min_wave_height_entry()
-
-        print("\nWave forecast during optimal cycle:")
-        print(f"- Mean wave height: {mean_wh:.2f} ft")
-        print(
-            "- Max wave:",
-            f"{max_wh_entry.time.astimezone().strftime('%Y-%m-%d %H:%M')} — {max_wh_entry.wave_height:.2f} ft, period {max_wh_entry.wave_period}s, dir {humanize(max_wh_entry.wave_direction)};",
-            f"wind-wave {max_wh_entry.wind_wave_height:.2f} ft, period {max_wh_entry.wind_wave_period}s, dir {humanize(max_wh_entry.wind_wave_direction)}",
-        )
-        print(
-            "- Min wave:",
-            f"{min_wh_entry.time.astimezone().strftime('%Y-%m-%d %H:%M')} — {min_wh_entry.wave_height:.2f} ft, period {min_wh_entry.wave_period}s, dir {humanize(min_wh_entry.wave_direction)};",
-            f"wind-wave {min_wh_entry.wind_wave_height:.2f} ft, period {min_wh_entry.wind_wave_period}s, dir {humanize(min_wh_entry.wind_wave_direction)}",
+        # Create formatted text output (detailed report)
+        detailed = render_detailed_report(
+            spot["name"], optimal_cycle, waves_during_cycle, winds_during_cycle
         )
 
-        # Winds
-        mean_ws = winds_during_cycle.mean_wind_speed()
-        mean_wd = winds_during_cycle.mean_wind_direction()
-        max_w_entry = winds_during_cycle.max_wind_entry()
-        min_w_entry = winds_during_cycle.min_wind_entry()
+        out_dir = os.environ.get("FAIRWEATHER_OUT", "out")
+        os.makedirs(out_dir, exist_ok=True)
+        safe_name = (
+            "".join(c for c in spot["name"] if c.isalnum() or c in ("-", "_", " "))
+            .strip()
+            .replace(" ", "_")
+        )
+        date_tag = optimal_cycle.start.timestamp.date().isoformat()
+        report_path = os.path.join(out_dir, f"{safe_name}-report-{date_tag}.txt")
 
-        print("\nWind forecast during optimal cycle:")
-        print(f"- Mean wind speed: {mean_ws:.1f} mph")
-        print(f"- Mean wind direction: {humanize(mean_wd)}")
-        print(
-            "- Max wind:",
-            f"{max_w_entry.time.strftime('%Y-%m-%d %H:%M')} — {max_w_entry.wind_speed_mph:.1f} mph, {humanize(max_w_entry.wind_direction)}; temp {max_w_entry.temperature:.1f}°F; rain {max_w_entry.rain:.1f} in",
-        )
-        print(
-            "- Min wind:",
-            f"{min_w_entry.time.strftime('%Y-%m-%d %H:%M')} — {min_w_entry.wind_speed_mph:.1f} mph, {humanize(min_w_entry.wind_direction)}; temp {min_w_entry.temperature:.1f}°F; rain {min_w_entry.rain:.1f} in",
-        )
+        with open(report_path, "w", encoding="utf-8") as f:
+            f.write(detailed)
+
+        print(f"Wrote detailed report: {report_path}")
 
         print("\n" + "=" * 40 + "\n")
 
