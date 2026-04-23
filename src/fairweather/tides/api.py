@@ -13,7 +13,6 @@ StrInt = Annotated[int, PlainSerializer(lambda x: str(x), return_type=str)]
 
 NOAA_TIDES_ENDPOINT = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
 
-
 def yesterday_date_str():
     yesterday = datetime.now(timezone.utc) - timedelta(days=1)
     return yesterday.strftime("%Y%m%d")
@@ -33,13 +32,16 @@ class TideRequest(BaseModel):
     station: StrInt = 9455500
 
 
-class TidePrediction(BaseModel):
+class TurnPrediction(BaseModel):
     timestamp: datetime = Field(alias="t")
     tide_type: Literal["H", "L"] = Field(alias="type")
     height: float = Field(alias="v")
 
     class ConfigDict:
         populate_by_name = True
+
+    def __str__(self):
+        return f"{self.tide_type} tide at {self.local_time().strftime('%Y-%m-%d %H:%M')} with height {self.height} ft"
 
     @field_validator("timestamp", mode="before")
     def _parse_timestamp_to_utc(cls, v):
@@ -54,13 +56,13 @@ class TidePrediction(BaseModel):
     def local_time(self) -> datetime:
         local_tz = datetime.now().astimezone().tzinfo
         return self.timestamp.astimezone(local_tz)
+    
+
+class TurnPredictionResponse(BaseModel):
+    predictions: list[TurnPrediction]
 
 
-class TidePredictionResponse(BaseModel):
-    predictions: list[TidePrediction]
-
-
-def fetch_tides(request: TideRequest) -> TidePredictionResponse:
+def fetch_tides(request: TideRequest) -> TurnPredictionResponse:
     """Fetch tide predictions from NOAA API."""
 
     # hit NOAA api with httpx
@@ -71,20 +73,4 @@ def fetch_tides(request: TideRequest) -> TidePredictionResponse:
 
     response.raise_for_status()
 
-    return TidePredictionResponse.model_validate_json(response.text)
-
-
-def find_last_tide(tide_predictions: list[TidePrediction]) -> TidePrediction:
-    """Find the most recent tide from the list of predictions."""
-    now = datetime.now(timezone.utc)
-    past_tides = [t for t in tide_predictions if t.timestamp <= now]
-    return past_tides[-1] if past_tides else None
-
-
-def find_next_tides(
-    tide_predictions: list[TidePrediction], count: int = 2
-) -> list[TidePrediction]:
-    """Find the next `count` tides from the list of predictions."""
-    now = datetime.now(timezone.utc)
-    upcoming_tides = [t for t in tide_predictions if t.timestamp > now]
-    return upcoming_tides[:count]
+    return TurnPredictionResponse.model_validate_json(response.text)
