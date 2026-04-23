@@ -1,5 +1,6 @@
 """Utilities for working with directions, such as converting between compass points and degrees."""
 
+
 def humanize(degrees: float) -> str:
     """Convert a direction in degrees to a human-readable compass point.
 

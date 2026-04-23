@@ -57,14 +57,24 @@ def test_end_to_end_with_mocks(monkeypatch):
 
         pred_times = [
             # a past tide before fixed_now
-            ((datetime.now() - timedelta(hours=1)).astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M"), 1.0, "H"),
+            (
+                (datetime.now() - timedelta(hours=1))
+                .astimezone(timezone.utc)
+                .strftime("%Y-%m-%d %H:%M"),
+                1.0,
+                "H",
+            ),
             # optimal turn at 08:30 local next day
             (local_to_utc_str(target_date, 8, 30), 0.5, "L"),
             # following tide later that day
             (local_to_utc_str(target_date, 16, 0), 2.5, "H"),
         ]
         tide_text = make_tide_text(pred_times)
-        monkeypatch.setattr(tides_api, "httpx", type("X", (), {"Client": lambda *a, **k: FakeClient(_resp_text=tide_text)}))
+        monkeypatch.setattr(
+            tides_api,
+            "httpx",
+            type("X", (), {"Client": lambda *a, **k: FakeClient(_resp_text=tide_text)}),
+        )
 
         tides_resp = tides_api.fetch_tides(TideRequest())
         cycle = tides_cycle.find_optimal_tide_cycle(tides_resp.predictions)
@@ -75,9 +85,19 @@ def test_end_to_end_with_mocks(monkeypatch):
             wave_text = f.read()
 
         import fairweather.waves.api as waves_api
-        monkeypatch.setattr(waves_api, "httpx", type("X", (), {"Client": lambda *a, **k: FakeClient(_resp_text=wave_text)}))
 
-        wr = WaveRequest(latitude=59.708336, longitude=-151.875, start_date="2026-04-17", end_date="2026-04-18")
+        monkeypatch.setattr(
+            waves_api,
+            "httpx",
+            type("X", (), {"Client": lambda *a, **k: FakeClient(_resp_text=wave_text)}),
+        )
+
+        wr = WaveRequest(
+            latitude=59.708336,
+            longitude=-151.875,
+            start_date="2026-04-17",
+            end_date="2026-04-18",
+        )
         wf_resp = fetch_wave_forecast(wr)
         wf = WaveForecast.from_response(wf_resp)
         during = wf.within_time_range(cycle.start.timestamp, cycle.end.timestamp)

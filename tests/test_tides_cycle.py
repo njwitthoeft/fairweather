@@ -55,7 +55,9 @@ def test_optimal_turn_selection():
             make_turn(local_to_utc(target_date, 16, 0), 2.5, "H"),
         ]
 
-        optimal = tides_cycle.find_optimal_tide_turn(preds, start_hour=6, end_hour=15, day_offset=1)
+        optimal = tides_cycle.find_optimal_tide_turn(
+            preds, start_hour=6, end_hour=15, day_offset=1
+        )
         assert optimal is not None
         assert optimal.tide_type == "L"
 

@@ -13,6 +13,7 @@ StrInt = Annotated[int, PlainSerializer(lambda x: str(x), return_type=str)]
 
 NOAA_TIDES_ENDPOINT = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
 
+
 def yesterday_date_str():
     yesterday = datetime.now(timezone.utc) - timedelta(days=1)
     return yesterday.strftime("%Y%m%d")
@@ -56,7 +57,7 @@ class TurnPrediction(BaseModel):
     def local_time(self) -> datetime:
         local_tz = datetime.now().astimezone().tzinfo
         return self.timestamp.astimezone(local_tz)
-    
+
 
 class TurnPredictionResponse(BaseModel):
     predictions: list[TurnPrediction]

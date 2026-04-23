@@ -35,8 +35,6 @@ class TideCycle:
         return not self.is_ebb()
 
 
-
-
 def find_last_tide_turn(tide_predictions: list[TurnPrediction]) -> TurnPrediction:
     """Find the most recent tide from the list of predictions."""
     now = datetime.now(timezone.utc)
