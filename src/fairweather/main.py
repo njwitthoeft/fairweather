@@ -1,11 +1,14 @@
 import json
 
+from fairweather.direction import humanize
 from fairweather.tides.api import TideRequest, fetch_tides
 from fairweather.tides.cycle import (
     find_optimal_tide_cycle,
 )
 from fairweather.waves.api import WaveRequest, fetch_wave_forecast
 from fairweather.waves.forecast import WaveForecast
+from fairweather.winds.api import WindRequest, fetch_wind_forecast
+from fairweather.winds.forecast import WindForecast
 
 
 def main():
@@ -35,7 +38,21 @@ def main():
             end_date=optimal_cycle.end.timestamp.date().isoformat(),
         )
         wave_forecast = WaveForecast.from_response(fetch_wave_forecast(wave_request))
-        forecast_during_cycle = wave_forecast.within_time_range(
+        
+        # get a wind forecast for the duration of the optimal cycle
+        wind_request = WindRequest(
+            latitude=spot["latitude"],
+            longitude=spot["longitude"],
+            start_date=optimal_cycle.start.timestamp.date().isoformat(),
+            end_date=optimal_cycle.end.timestamp.date().isoformat(),
+        )
+        wind_forecast = WindForecast.from_response(fetch_wind_forecast(wind_request))
+        
+    
+        waves_during_cycle = wave_forecast.within_time_range(
+            optimal_cycle.start.timestamp, optimal_cycle.end.timestamp
+        )
+        winds_during_cycle = wind_forecast.within_time_range(
             optimal_cycle.start.timestamp, optimal_cycle.end.timestamp
         )
 
@@ -43,9 +60,17 @@ def main():
         print(optimal_cycle)
 
         print("\nWave forecast during optimal cycle:")
-        print(f"Mean wave height: {forecast_during_cycle.mean_wave_height()}")
-        print(f"Max wave height entry: {forecast_during_cycle.max_wave_height_entry()}")
-        print(f"Min wave height entry: {forecast_during_cycle.min_wave_height_entry()}")
+        print(f"Mean wave height: {waves_during_cycle.mean_wave_height()}")
+        print(f"Max wave height entry: {waves_during_cycle.max_wave_height_entry()}")
+        print(f"Min wave height entry: {waves_during_cycle.min_wave_height_entry()}")
+
+        print("\nWind forecast during optimal cycle:")
+        print(f"Mean wind speed: {winds_during_cycle.mean_wind_speed()}")
+        print(f"Mean wind direction: {humanize(winds_during_cycle.mean_wind_direction())}")
+        print(f"Max wind speed entry: {winds_during_cycle.max_wind_entry()}")
+        print(f"Min wind speed entry: {winds_during_cycle.min_wind_entry()}")
+
+
 
         print("\n" + "=" * 40 + "\n")
 

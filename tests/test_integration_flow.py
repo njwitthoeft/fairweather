@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timedelta, timezone
+import pprint
 from freezegun import freeze_time
 
 from fairweather.tides.api import TideRequest
@@ -8,6 +9,10 @@ from fairweather.tides import cycle as tides_cycle
 from fairweather.waves.api import WaveRequest
 from fairweather.waves.api import fetch_wave_forecast
 from fairweather.waves.forecast import WaveForecast
+import fairweather.winds.api as wind_api
+from fairweather.winds.forecast import WindForecast
+from fairweather.winds.api import WindRequest, fetch_wind_forecast
+
 
 
 class DummyResponse:
@@ -81,7 +86,7 @@ def test_end_to_end_with_mocks(monkeypatch):
         assert cycle is not None
 
         # Use the bundled example Open-Meteo response
-        with open("tests/example_response.json") as f:
+        with open("tests/example_response_waves.json") as f:
             wave_text = f.read()
 
         import fairweather.waves.api as waves_api
@@ -95,12 +100,38 @@ def test_end_to_end_with_mocks(monkeypatch):
         wr = WaveRequest(
             latitude=59.708336,
             longitude=-151.875,
-            start_date="2026-04-17",
-            end_date="2026-04-18",
+            start_date="2026-04-22",
+            end_date="2026-04-23",
         )
         wf_resp = fetch_wave_forecast(wr)
         wf = WaveForecast.from_response(wf_resp)
-        during = wf.within_time_range(cycle.start.timestamp, cycle.end.timestamp)
+        wave_during = wf.within_time_range(cycle.start.timestamp, cycle.end.timestamp)
 
         # `during` is a WaveForecast instance (may be empty depending on dates)
-        assert isinstance(during, WaveForecast)
+        assert isinstance(wave_during, WaveForecast)
+        assert all(cycle.start.timestamp <= h.time <= cycle.end.timestamp for h in wave_during.hourlies)
+
+
+
+        # Also fetch wind data for the cycle and ensure we have wind samples
+        with open("tests/example_response_winds.json") as f:
+            wind_text = f.read()
+
+
+        monkeypatch.setattr(
+            wind_api,
+            "httpx",
+            type("X", (), {"Client": lambda *a, **k: FakeClient(_resp_text=wind_text)}),
+        )
+
+        wr = WindRequest(
+            latitude=59.708336, longitude=-151.875, start_date="2026-04-22", end_date="2026-04-23"
+        )
+        wind_resp = fetch_wind_forecast(wr)
+        wind_forecast = WindForecast.from_response(wind_resp)
+        wind_during = wind_forecast.within_time_range(cycle.start.timestamp, cycle.end.timestamp)
+
+        assert isinstance(wind_during, WindForecast)
+        assert all(cycle.start.timestamp <= h.time <= cycle.end.timestamp for h in wind_during.hourlies)
+
+        assert len(wind_during.hourlies) == len(wave_during.hourlies)  # in our test data, wind and wave forecasts have same timestamps
