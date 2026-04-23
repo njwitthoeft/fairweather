@@ -5,12 +5,13 @@ import httpx
 
 OPEN_METEO_MARINE = "https://marine-api.open-meteo.com/v1/marine"
 
+
 class WaveRequest(BaseModel):
     latitude: float
     longitude: float
     timezone: Literal["GMT"] = "GMT"
     length_unit: Literal["imperial"] = "imperial"
-     
+
     start_date: str  # YYYY-MM-DD
     end_date: str  # YYYY-MM-DD
 

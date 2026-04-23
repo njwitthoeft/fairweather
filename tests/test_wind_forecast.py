@@ -18,7 +18,6 @@ def test_forecast_parsing_and_units_from_example():
     assert entries[0].wind_speed_mph == pytest.approx(resp.hourly.wind_speed_10m[0])
 
 
-
 def test_windforecast_metrics():
     p = Path(__file__).with_name("example_response_winds.json")
     data = p.read_text()
@@ -35,8 +34,12 @@ def test_mean_wind_direction_wraparound():
     from fairweather.winds.forecast import HourlyWindForecast, WindForecast
 
     now = datetime.now(timezone.utc)
-    a = HourlyWindForecast(time=now, wind_speed_mph=5.0, wind_direction=359, temperature=50, rain=0)
-    b = HourlyWindForecast(time=now, wind_speed_mph=5.0, wind_direction=1, temperature=50, rain=0)
+    a = HourlyWindForecast(
+        time=now, wind_speed_mph=5.0, wind_direction=359, temperature=50, rain=0
+    )
+    b = HourlyWindForecast(
+        time=now, wind_speed_mph=5.0, wind_direction=1, temperature=50, rain=0
+    )
     wf = WindForecast(hourlies=[a, b])
 
     mean_dir = wf.mean_wind_direction()
@@ -48,8 +51,12 @@ def test_mean_wind_direction_near_zero_with_offset():
     from fairweather.winds.forecast import HourlyWindForecast, WindForecast
 
     now = datetime.now(timezone.utc)
-    a = HourlyWindForecast(time=now, wind_speed_mph=5.0, wind_direction=350, temperature=50, rain=0)
-    b = HourlyWindForecast(time=now, wind_speed_mph=5.0, wind_direction=10, temperature=50, rain=0)
+    a = HourlyWindForecast(
+        time=now, wind_speed_mph=5.0, wind_direction=350, temperature=50, rain=0
+    )
+    b = HourlyWindForecast(
+        time=now, wind_speed_mph=5.0, wind_direction=10, temperature=50, rain=0
+    )
     wf = WindForecast(hourlies=[a, b])
 
     mean_dir = wf.mean_wind_direction()

@@ -22,6 +22,7 @@ class WindRequest(BaseModel):
         ]
     )
 
+
 class HourlyWindDataSOA(BaseModel):
     time: List[str]
     wind_speed_10m: List[float]
@@ -52,11 +53,15 @@ class WindForecastResponse(BaseModel):
 
 def fetch_wind_forecast(wind_request: WindRequest) -> WindForecastResponse:
     with httpx.Client(http2=True) as client:
-        resp = client.get(OPEN_METEO_FORECAST, params=wind_request.model_dump(), timeout=10)
+        resp = client.get(
+            OPEN_METEO_FORECAST, params=wind_request.model_dump(), timeout=10
+        )
 
     if hasattr(resp, "status_code"):
         if resp.status_code >= 400:
-            raise RuntimeError(f"Open-Meteo API error {resp.status_code}: {getattr(resp, 'text', '')}")
+            raise RuntimeError(
+                f"Open-Meteo API error {resp.status_code}: {getattr(resp, 'text', '')}"
+            )
     else:
         try:
             resp.raise_for_status()

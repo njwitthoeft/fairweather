@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timezone
 
 from freezegun import freeze_time
@@ -47,7 +46,12 @@ def test_fetch_wind_for_cycle(monkeypatch):
             type("X", (), {"Client": lambda *a, **k: FakeClient(_resp_text=wind_text)}),
         )
 
-        req = WindRequest(latitude=59.75, longitude=-151.75, start_date=start.date().isoformat(), end_date=end.date().isoformat())
+        req = WindRequest(
+            latitude=59.75,
+            longitude=-151.75,
+            start_date=start.date().isoformat(),
+            end_date=end.date().isoformat(),
+        )
         resp = fetch_wind_forecast(req)
         wf = WindForecast.from_response(resp).within_time_range(start, end)
         assert wf is not None

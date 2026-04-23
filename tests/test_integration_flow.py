@@ -1,6 +1,5 @@
 import json
 from datetime import datetime, timedelta, timezone
-import pprint
 from freezegun import freeze_time
 
 from fairweather.tides.api import TideRequest
@@ -12,7 +11,6 @@ from fairweather.waves.forecast import WaveForecast
 import fairweather.winds.api as wind_api
 from fairweather.winds.forecast import WindForecast
 from fairweather.winds.api import WindRequest, fetch_wind_forecast
-
 
 
 class DummyResponse:
@@ -109,14 +107,14 @@ def test_end_to_end_with_mocks(monkeypatch):
 
         # `during` is a WaveForecast instance (may be empty depending on dates)
         assert isinstance(wave_during, WaveForecast)
-        assert all(cycle.start.timestamp <= h.time <= cycle.end.timestamp for h in wave_during.hourlies)
-
-
+        assert all(
+            cycle.start.timestamp <= h.time <= cycle.end.timestamp
+            for h in wave_during.hourlies
+        )
 
         # Also fetch wind data for the cycle and ensure we have wind samples
         with open("tests/example_response_winds.json") as f:
             wind_text = f.read()
-
 
         monkeypatch.setattr(
             wind_api,
@@ -125,13 +123,23 @@ def test_end_to_end_with_mocks(monkeypatch):
         )
 
         wr = WindRequest(
-            latitude=59.708336, longitude=-151.875, start_date="2026-04-22", end_date="2026-04-23"
+            latitude=59.708336,
+            longitude=-151.875,
+            start_date="2026-04-22",
+            end_date="2026-04-23",
         )
         wind_resp = fetch_wind_forecast(wr)
         wind_forecast = WindForecast.from_response(wind_resp)
-        wind_during = wind_forecast.within_time_range(cycle.start.timestamp, cycle.end.timestamp)
+        wind_during = wind_forecast.within_time_range(
+            cycle.start.timestamp, cycle.end.timestamp
+        )
 
         assert isinstance(wind_during, WindForecast)
-        assert all(cycle.start.timestamp <= h.time <= cycle.end.timestamp for h in wind_during.hourlies)
+        assert all(
+            cycle.start.timestamp <= h.time <= cycle.end.timestamp
+            for h in wind_during.hourlies
+        )
 
-        assert len(wind_during.hourlies) == len(wave_during.hourlies)  # in our test data, wind and wave forecasts have same timestamps
+        assert len(wind_during.hourlies) == len(
+            wave_during.hourlies
+        )  # in our test data, wind and wave forecasts have same timestamps

@@ -14,7 +14,6 @@ class HourlyWindForecast(BaseModel):
     temperature: float
     rain: float
 
-
     def __str__(self):
         local = self.time.astimezone().strftime("%Y-%m-%d %H:%M")
         return (
@@ -23,10 +22,12 @@ class HourlyWindForecast(BaseModel):
         )
 
 
-def forecast_response_to_hourly_entries(forecast: WindForecastResponse) -> List[HourlyWindForecast]:
+def forecast_response_to_hourly_entries(
+    forecast: WindForecastResponse,
+) -> List[HourlyWindForecast]:
     entries: List[HourlyWindForecast] = []
 
-    for (time_str, speed_mph, d, temp, rain) in zip(
+    for time_str, speed_mph, d, temp, rain in zip(
         forecast.hourly.time,
         forecast.hourly.wind_speed_10m,
         forecast.hourly.wind_direction_10m,
@@ -58,10 +59,11 @@ class WindForecast(BaseModel):
     def from_response(cls, response: WindForecastResponse) -> "WindForecast":
         hourlies = forecast_response_to_hourly_entries(response)
         return cls(hourlies=hourlies)
-    
 
     def within_time_range(self, start: datetime, end: datetime) -> "WindForecast":
-        return WindForecast(hourlies=[h for h in self.hourlies if start <= h.time <= end])
+        return WindForecast(
+            hourlies=[h for h in self.hourlies if start <= h.time <= end]
+        )
 
     def max_wind_entry(self) -> HourlyWindForecast:
         return max(self.hourlies, key=lambda e: e.wind_speed_mph)

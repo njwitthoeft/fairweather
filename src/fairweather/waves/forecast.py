@@ -78,7 +78,7 @@ class WaveForecast(BaseModel):
 
     def within_time_range(
         self, cycle_start: datetime, cycle_end: datetime
-    ) -> List[HourlyWaveForecast]:
+    ) -> WaveForecast:
         return WaveForecast(
             hourlies=[
                 entry
@@ -87,11 +87,11 @@ class WaveForecast(BaseModel):
             ]
         )
 
-    def max_wave_height_entry(self) -> float:
+    def max_wave_height_entry(self) -> HourlyWaveForecast:
         max_entry = max(self.hourlies, key=lambda e: e.wave_height)
         return max_entry
 
-    def min_wave_height_entry(self) -> float:
+    def min_wave_height_entry(self) -> HourlyWaveForecast:
         min_entry = min(self.hourlies, key=lambda e: e.wave_height)
         return min_entry
 

@@ -30,9 +30,8 @@ def test_hourly_entries_count(wf_response):
 def test_waveforecast_metrics_and_within_range(wf, wf_response):
     # mean, min, max should be consistent with entries
     mean = wf.mean_wave_height()
-    mean_response = (
-        sum(wf_response.hourly.wave_height)
-        / len(wf_response.hourly.wave_height)
+    mean_response = sum(wf_response.hourly.wave_height) / len(
+        wf_response.hourly.wave_height
     )
     assert mean == pytest.approx(mean_response, rel=1e-6)
 
